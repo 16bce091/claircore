@@ -19,6 +19,9 @@ import (
 // Libvuln also runs background updaters which keep the vulnerability
 // database consistent.
 type Libvuln struct {
+//  vuln        vulnstore.Vulnerability
+
+
 	store        vulnstore.Store
 	db           *sqlx.DB
 	matchers     []driver.Matcher
@@ -39,6 +42,11 @@ func New(ctx context.Context, opts *Opts) (*Libvuln, error) {
 		Int32("count", opts.MaxConnPool).
 		Msg("initializing store")
 	db, vulnstore, err := initStore(ctx, opts)
+
+	// DA_Store=da_store.Store{}
+
+
+
 	if err != nil {
 		return nil, err
 	}
@@ -55,6 +63,9 @@ func New(ctx context.Context, opts *Opts) (*Libvuln, error) {
 			Msg("updater error")
 	}
 	l := &Libvuln{
+
+		// vuln:      DA_Store
+
 		store:        vulnstore,
 		db:           db,
 		matchers:     opts.Matchers,
@@ -67,6 +78,8 @@ func New(ctx context.Context, opts *Opts) (*Libvuln, error) {
 // Scan creates a VulnerabilityReport given a manifest's IndexReport.
 func (l *Libvuln) Scan(ctx context.Context, ir *claircore.IndexReport) (*claircore.VulnerabilityReport, error) {
 	return matcher.Match(ctx, ir, l.matchers, l.store)
+
+	// pass as a parameter (l.vuln)
 }
 
 // UpdateOperations returns UpdateOperations in date descending order keyed by the

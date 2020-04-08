@@ -38,6 +38,10 @@ func Match(ctx context.Context, ir *claircore.IndexReport, matchers []driver.Mat
 			mm := m
 			g.Go(func() error {
 				mc := NewController(mm, store)
+
+
+				// pass DA_Store to the new Controller
+
 				vulns, err := mc.Match(ctx, records)
 				if err != nil {
 					return err

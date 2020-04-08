@@ -17,6 +17,10 @@ type Controller struct {
 	m driver.Matcher
 	// a vulnstore.Vulnerability instance for querying vulnerabilities
 	store vulnstore.Vulnerability
+
+	// include da_store
+
+	// da_store vulnstore.Vulnerability
 }
 
 // NewController is a constructor for a Controller
@@ -24,6 +28,8 @@ func NewController(m driver.Matcher, store vulnstore.Vulnerability) *Controller 
 	return &Controller{
 		m:     m,
 		store: store,
+
+		//da_store: da_store
 	}
 }
 
@@ -51,6 +57,8 @@ func (mc *Controller) Match(ctx context.Context, records []*claircore.IndexRecor
 		Bool("authoritative", authoritative).
 		Msg("version filter compatible?")
 
+
+	// mc.da_store.Get(ctx,interested,getOpts)
 	// query the vulnstore
 	vulns, err := mc.query(ctx, interested, dbSide)
 	if err != nil {
