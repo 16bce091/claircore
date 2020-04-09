@@ -285,6 +285,8 @@ func runManifest(ctx context.Context, img string, cfg *commonConfig, cmdcfg *rep
 
 	var r claircore.IndexReport
 	err = json.NewDecoder(res.Body).Decode(&r)
+// changing 
+	fmt.Println(r)
 	res.Body.Close()
 	if err != nil {
 		return nil, err

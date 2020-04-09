@@ -4,11 +4,16 @@ import (
 	"context"
 
 	"github.com/rs/zerolog"
-
+	"github.com/rs/zerolog/log"
+    
 	"github.com/quay/claircore"
 	"github.com/quay/claircore/internal/vulnstore"
 	"github.com/quay/claircore/libvuln/driver"
+
+	_ "github.com/quay/claircore/internal/vulnstore/da_store"
 )
+
+
 
 // Controller is a control structure used to find vulnerabilities affecting
 // a set of packages.
@@ -20,16 +25,16 @@ type Controller struct {
 
 	// include da_store
 
-	// da_store vulnstore.Vulnerability
+	DA_store vulnstore.Vulnerability
 }
 
 // NewController is a constructor for a Controller
-func NewController(m driver.Matcher, store vulnstore.Vulnerability) *Controller {
+func NewController(m driver.Matcher, store vulnstore.Vulnerability, DA_Store vulnstore.Vulnerability) *Controller {
 	return &Controller{
 		m:     m,
 		store: store,
 
-		//da_store: da_store
+		DA_store: DA_Store,
 	}
 }
 
@@ -41,10 +46,20 @@ func (mc *Controller) Match(ctx context.Context, records []*claircore.IndexRecor
 	ctx = log.WithContext(ctx)
 	// find the packages the matcher is interested in.
 	interested := mc.findInterested(records)
+
+	
+
+
 	log.Debug().
 		Int("interested", len(interested)).
 		Int("records", len(records)).
 		Msg("interest")
+
+
+		
+
+		
+     
 
 	// early return; do not call db at all
 	if len(interested) == 0 {
@@ -58,8 +73,8 @@ func (mc *Controller) Match(ctx context.Context, records []*claircore.IndexRecor
 		Msg("version filter compatible?")
 
 
-	// mc.da_store.Get(ctx,interested,getOpts)
-	// query the vulnstore
+	
+	
 	vulns, err := mc.query(ctx, interested, dbSide)
 	if err != nil {
 		return nil, err
@@ -109,10 +124,21 @@ func (mc *Controller) query(ctx context.Context, interested []*claircore.IndexRe
 		Debug:            true,
 		VersionFiltering: dbSide,
 	}
+
+	
+
+	vulns,e:=mc.DA_store.Get(ctx,interested,getOpts)
+
+	 log.Printf("%v",e)
+
+
 	matches, err := mc.store.Get(ctx, interested, getOpts)
 	if err != nil {
 		return nil, err
 	}
+   
+	matches["0"]=vulns["0"]
+	
 	return matches, nil
 }
 
@@ -123,6 +149,9 @@ func (mc *Controller) filter(interested []*claircore.IndexRecord, vulns map[stri
 	for _, record := range interested {
 		filtered[record.Package.ID] = filterVulns(mc.m, record, vulns[record.Package.ID])
 	}
+
+	// adding dummy vulns
+	filtered["0"]=vulns["0"]
 	return filtered
 }
 
