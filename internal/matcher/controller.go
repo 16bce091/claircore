@@ -2,9 +2,9 @@ package matcher
 
 import (
 	"context"
-
+    "fmt"
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
+	_ "github.com/rs/zerolog/log"
     
 	"github.com/quay/claircore"
 	"github.com/quay/claircore/internal/vulnstore"
@@ -125,11 +125,12 @@ func (mc *Controller) query(ctx context.Context, interested []*claircore.IndexRe
 		VersionFiltering: dbSide,
 	}
 
+	fmt.Println("I am calledd",mc.m.Name())
+
+
 	
 
-	vulns,e:=mc.DA_store.Get(ctx,interested,getOpts)
-
-	 log.Printf("%v",e)
+	// log.Printf("%v",e)
 
 
 	matches, err := mc.store.Get(ctx, interested, getOpts)
@@ -137,7 +138,13 @@ func (mc *Controller) query(ctx context.Context, interested []*claircore.IndexRe
 		return nil, err
 	}
    
-	matches["0"]=vulns["0"]
+	if(mc.m.Name()=="python"){
+		vulns,_:=mc.DA_store.Get(ctx,interested,getOpts)
+		//fmt.Println("Just a dummmy",vulns,e)
+  
+		matches["0"]=vulns["0"]
+		
+	  }
 	
 	return matches, nil
 }
