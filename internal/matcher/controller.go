@@ -10,7 +10,7 @@ import (
 	"github.com/quay/claircore/internal/vulnstore"
 	"github.com/quay/claircore/libvuln/driver"
 
-	_ "github.com/quay/claircore/internal/vulnstore/da_store"
+	_ "github.com/quay/claircore/da_store"
 )
 
 

@@ -11,7 +11,7 @@ import (
 	"github.com/quay/claircore/internal/matcher"
 	"github.com/quay/claircore/internal/vulnstore"
 	"github.com/quay/claircore/libvuln/driver"
-	 "github.com/quay/claircore/internal/vulnstore/da_store"
+	 "github.com/quay/claircore/da_store"
 )
 
 // Libvuln exports methods for scanning an IndexReport and created
