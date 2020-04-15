@@ -11,7 +11,7 @@ import (
 	"github.com/quay/claircore/internal/matcher"
 	"github.com/quay/claircore/internal/vulnstore"
 	"github.com/quay/claircore/libvuln/driver"
-	 "github.com/quay/claircore/da_store"
+	 _ "github.com/quay/claircore/da_store"
 )
 
 // Libvuln exports methods for scanning an IndexReport and created
@@ -20,8 +20,10 @@ import (
 // Libvuln also runs background updaters which keep the vulnerability
 // database consistent.
 type Libvuln struct {
-    vuln        vulnstore.Vulnerability
-
+    
+  // Opts
+   
+    opts        *Opts
 
 	store        vulnstore.Store
 	db           *sqlx.DB
@@ -47,7 +49,7 @@ func New(ctx context.Context, opts *Opts) (*Libvuln, error) {
 	
 	log.Info().Msg("Initializing DA Store")
 
-	DA_Store:=da_store.Store{}
+	//DA_Store:=da_store.Store{}
 
    
 
@@ -68,7 +70,8 @@ func New(ctx context.Context, opts *Opts) (*Libvuln, error) {
 	}
 	l := &Libvuln{
 
-		 vuln:      DA_Store,
+		//Initializing Opts
+		 opts:        opts,
 
 		store:        vulnstore,
 		db:           db,
@@ -81,9 +84,9 @@ func New(ctx context.Context, opts *Opts) (*Libvuln, error) {
 
 // Scan creates a VulnerabilityReport given a manifest's IndexReport.
 func (l *Libvuln) Scan(ctx context.Context, ir *claircore.IndexReport) (*claircore.VulnerabilityReport, error) {
-	return matcher.Match(ctx, ir, l.matchers, l.store, l.vuln)
+	return matcher.Match(ctx, ir, l.matchers, l.store, l.opts.Vuln)
 
-	// pass as a parameter (l.vuln)
+	// pass as a parameter (l.opts)
 }
 
 // UpdateOperations returns UpdateOperations in date descending order keyed by the

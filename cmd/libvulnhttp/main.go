@@ -24,6 +24,7 @@ type Config struct {
 	Run            string `cfg:"RUN" cfgDefault:"." cfgHelper:"Regexp of updaters to run."`
 	LogLevel       string `cfgDefault:"debug" cfg:"LOG_LEVEL" cfgHelper:"Log levels: debug, info, warning, error, fatal, panic" `
 	Migrations     bool   `cfgDefault:"true" cfg:"MIGRATIONS" cfgHelper:"Should server run migrations"`
+
 }
 
 func main() {
@@ -100,6 +101,7 @@ func confToLibvulnOpts(conf Config) *libvuln.Opts {
 		MaxConnPool: int32(conf.MaxConnPool),
 		Migrations:  true,
 		Run:         conf.Run,
+		
 	}
 
 	return opts

@@ -11,6 +11,8 @@ import (
 	"github.com/quay/claircore/python"
 	"github.com/quay/claircore/rhel"
 	"github.com/quay/claircore/ubuntu"
+	"github.com/quay/claircore/internal/vulnstore"
+	"github.com/quay/claircore/da_store"
 )
 
 const (
@@ -36,10 +38,17 @@ type Opts struct {
 	Updaters []driver.Updater
 	// a regex string to filter running updaters by
 	Run string
+    //Adding Vulnstore.Vulnerability for DA Store
+	Vuln  vulnstore.Vulnerability
 }
 
 func (o *Opts) Parse() error {
-	// required
+
+	//Initializing DA Store
+	o.Vuln=da_store.Store{}
+
+  fmt.Println("Initializing DA Store",o.Vuln)
+	
 	if o.ConnString == "" {
 		return fmt.Errorf("no connection string provided")
 	}
