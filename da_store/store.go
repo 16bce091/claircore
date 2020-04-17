@@ -21,35 +21,15 @@ var (
 	_ vulnstore.Vulnerability = (*Store)(nil)
 )
 
-
-
-
-
-
-
-
-
-
-
-
 // store implements all interfaces in the vulnstore package
-
-
-
-
-
-
 // UpdateVulnerabilities implements vulnstore.Updater.
 func (s *Store) UpdateVulnerabilities(ctx context.Context, updater string, fingerprint driver.Fingerprint, vulns []*claircore.Vulnerability) (uuid.UUID, error) {
-	
 	 return uuid.Nil,nil
 }
 
 // GetUpdateOperations implements vulnstore.Updater.
 func (s *Store) GetUpdateOperations(ctx context.Context, updater ...string) (map[string][]driver.UpdateOperation, error) {
-
-	
-	return nil,nil
+      return nil,nil
 }
 
 // DeleteUpdateOperations implements vulnstore.Updater.
@@ -66,28 +46,15 @@ func (s *Store) GetUpdateDiff(ctx context.Context, a, b uuid.UUID) (*driver.Upda
 }
 
 func (s *Store) GetLatestUpdateRef(ctx context.Context) (uuid.UUID, error) {
-
-	
-	return uuid.Nil,nil
+    return uuid.Nil,nil
 }
 
 func (s *Store) GetLatestUpdateRefs(ctx context.Context) (map[string]uuid.UUID, error) {
-
-//	r:=make(map[string]uuid.UUID)
-	return nil,nil
+      return nil,nil
 }
-
-
-
-
 // Get implements vulnstore.Vulnerability.
-
-
 func (s *Store) Get(ctx context.Context, records []*claircore.IndexRecord, opts vulnstore.GetOpts) (map[string][]*claircore.Vulnerability, error) {
 	// filter out the python packages by looping for the records
-	
-
-
 	log := zerolog.Ctx(ctx).With().
 	Str("component", "internal/vulnstore/da_store").
 	Logger()
