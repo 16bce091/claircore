@@ -3,7 +3,8 @@ package libvuln
 import (
 	"fmt"
 	"time"
-
+	"context"
+	"github.com/jmoiron/sqlx"
 	"github.com/quay/claircore/alpine"
 	"github.com/quay/claircore/aws"
 	"github.com/quay/claircore/debian"
@@ -20,7 +21,11 @@ const (
 	DefaultUpdaterInitConcurrency = 10
 	DefaultMaxConnPool            = 100
 )
-
+// making the struct for array of stores
+type Stores struct{
+    store vulnstore.Store
+	db    *sqlx.DB
+}
 type Opts struct {
 	// the maximum size of the connection pool used by the database
 	MaxConnPool int32
@@ -38,17 +43,11 @@ type Opts struct {
 	Updaters []driver.Updater
 	// a regex string to filter running updaters by
 	Run string
-    //Adding Vulnstore.Vulnerability for DA Store
-	Vuln  vulnstore.Vulnerability
+    //Creating array of stores
+    vulnStores []Stores
 }
 
-func (o *Opts) Parse() error {
-
-	//Initializing DA Store
-	o.Vuln=da_store.Store{}
-
-  fmt.Println("Initializing DA Store",o.Vuln)
-	
+func (o *Opts) Parse(ctx context.Context) error {
 	if o.ConnString == "" {
 		return fmt.Errorf("no connection string provided")
 	}
@@ -89,6 +88,22 @@ func (o *Opts) Parse() error {
 			return fmt.Errorf("regex filtering of updaters failed: %w", err)
 		}
 	}
+  //initializing da store and postgres
+	daStore:=&da_store.Store{}
+    db, postgresStore, err := initStore(ctx, o)
 
-	return nil
+	if err != nil {
+		return err
+	}
+    o.vulnStores=[]Stores{
+		{
+			store: postgresStore,
+			db: db,
+		},
+        {
+			store: daStore,
+			db:nil,
+		},
+	}
+  return nil
 }

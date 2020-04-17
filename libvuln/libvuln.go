@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/jmoiron/sqlx"
+//	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog"
 
 	"github.com/quay/claircore"
@@ -19,14 +19,10 @@ import (
 //
 // Libvuln also runs background updaters which keep the vulnerability
 // database consistent.
-type Libvuln struct {
-    
-  // Opts
-   
-    opts        *Opts
 
-	store        vulnstore.Store
-	db           *sqlx.DB
+type Libvuln struct {
+    // declaring array of stores
+    stores       []Stores
 	matchers     []driver.Matcher
 	killUpdaters context.CancelFunc
 }
@@ -37,31 +33,25 @@ func New(ctx context.Context, opts *Opts) (*Libvuln, error) {
 		Str("component", "libvuln/New").
 		Logger()
 	ctx = log.WithContext(ctx)
-	err := opts.Parse()
+	err := opts.Parse(ctx)
 	if err != nil {
 		return nil, err
 	}
 	log.Info().
 		Int32("count", opts.MaxConnPool).
 		Msg("initializing store")
-	db, vulnstore, err := initStore(ctx, opts)
-	
-	
-	log.Info().Msg("Initializing DA Store")
-
-	//DA_Store:=da_store.Store{}
-
-   
-
-	if err != nil {
-		return nil, err
-	}
+	//db, postgresstore, err := initStore(ctx, opts)
+	// if err != nil {
+	// 	return nil, err
+	// }
 	eC := make(chan error, 1024)
 	dC := make(chan context.CancelFunc, 1)
 	// block on updater initialization.
 	log.Info().Msg("updater initialization start")
-	go initUpdaters(ctx, opts, db, vulnstore, dC, eC)
-	killUpdaters := <-dC
+//	go initUpdaters(ctx, opts, opts.vulnStores[0].db, opts.vulnStores[0].store, dC, eC)
+   go initUpdaters(ctx,opts,dC,eC)
+	killUpdaters:=<-dC
+	
 	log.Info().Msg("updater initialization done")
 	for err := range eC {
 		log.Warn().
@@ -69,12 +59,8 @@ func New(ctx context.Context, opts *Opts) (*Libvuln, error) {
 			Msg("updater error")
 	}
 	l := &Libvuln{
-
-		//Initializing Opts
-		 opts:        opts,
-
-		store:        vulnstore,
-		db:           db,
+//		Initializing array of stores from opts 
+        stores: opts.vulnStores,
 		matchers:     opts.Matchers,
 		killUpdaters: killUpdaters,
 	}
@@ -84,27 +70,59 @@ func New(ctx context.Context, opts *Opts) (*Libvuln, error) {
 
 // Scan creates a VulnerabilityReport given a manifest's IndexReport.
 func (l *Libvuln) Scan(ctx context.Context, ir *claircore.IndexReport) (*claircore.VulnerabilityReport, error) {
-	return matcher.Match(ctx, ir, l.matchers, l.store, l.opts.Vuln)
-
-	// pass as a parameter (l.opts)
+//Passing array of stores to the match function
+	v:=[]vulnstore.Store{
+		l.stores[0].store,
+		l.stores[1].store,
+	}
+	return matcher.Match(ctx, ir, l.matchers,v)
 }
 
 // UpdateOperations returns UpdateOperations in date descending order keyed by the
 // Updater name
+
+// Looping for the stores(postgress and dastore)
 func (l *Libvuln) UpdateOperations(ctx context.Context, updaters ...string) (map[string][]driver.UpdateOperation, error) {
-	return l.store.GetUpdateOperations(ctx, updaters...)
+	results:=make(map[string][]driver.UpdateOperation)
+    for _,stores:=range l.stores{
+		result,err:=stores.store.GetUpdateOperations(ctx, updaters...)
+	    if result==nil{
+		   continue
+	    }
+	    if err!=nil{
+		   return result,err
+	    }
+      results=result
+	}
+  return results,nil
 }
 
 // DeleteUpdateOperations removes one or more update operations and their
 // associated vulnerabilities from the vulnerability database.
 func (l *Libvuln) DeleteUpdateOperations(ctx context.Context, ref ...uuid.UUID) error {
-	return l.store.DeleteUpdateOperations(ctx, ref...)
+	for _,stores:=range l.stores{
+      err:=stores.store.DeleteUpdateOperations(ctx, ref...)
+      if err!=nil{
+		 return err
+	  }
+	}
+  return nil
 }
 
 // UpdateDiff returns an UpdateDiff describing the changes between prev
 // and cur.
 func (l *Libvuln) UpdateDiff(ctx context.Context, prev, cur uuid.UUID) (*driver.UpdateDiff, error) {
-	return l.store.GetUpdateDiff(ctx, prev, cur)
+   for _,stores:=range l.stores{
+	   result,err:= stores.store.GetUpdateDiff(ctx, prev, cur)
+       if result==nil{
+		  continue
+	   }
+	   if err!=nil{
+	     return result,err
+	   }
+       return result,err
+ }
+	return nil,nil
 }
 
 // LatestUpdateOperations returns references for the latest update for every
@@ -112,7 +130,18 @@ func (l *Libvuln) UpdateDiff(ctx context.Context, prev, cur uuid.UUID) (*driver.
 //
 // These references are okay to expose externally.
 func (l *Libvuln) LatestUpdateOperations(ctx context.Context) (map[string]uuid.UUID, error) {
-	return l.store.GetLatestUpdateRefs(ctx)
+	results:=make(map[string]uuid.UUID)
+	for _,stores:=range l.stores{
+        result,err:=stores.store.GetLatestUpdateRefs(ctx)
+        if result==nil{
+		   continue
+        }
+        if err!=nil{
+           return result,err
+	    }
+       results=result
+    }
+ return results,nil
 }
 
 // LatestUpdateOperation returns a reference to the latest known update.
@@ -120,5 +149,15 @@ func (l *Libvuln) LatestUpdateOperations(ctx context.Context) (map[string]uuid.U
 // This can be used by clients to determine if a call to Scan is likely to
 // return new results.
 func (l *Libvuln) LatestUpdateOperation(ctx context.Context) (uuid.UUID, error) {
-	return l.store.GetLatestUpdateRef(ctx)
+	for _,stores:=range l.stores{
+       result,err:= stores.store.GetLatestUpdateRef(ctx)
+       if result==uuid.Nil{
+		  continue
+       }
+       if err!=nil{
+		  return result,err
+	   }
+      return result,err
+	}
+return uuid.Nil,nil
 }

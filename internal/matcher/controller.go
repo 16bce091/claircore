@@ -21,20 +21,20 @@ type Controller struct {
 	// an implemented Matcher
 	m driver.Matcher
 	// a vulnstore.Vulnerability instance for querying vulnerabilities
-	store vulnstore.Vulnerability
-
+	//store vulnstore.Vulnerability
+    store[] vulnstore.Store
 	// include da_store
 
-	DA_store vulnstore.Vulnerability
+//	DA_store vulnstore.Vulnerability
 }
 
 // NewController is a constructor for a Controller
-func NewController(m driver.Matcher, store vulnstore.Vulnerability, DA_Store vulnstore.Vulnerability) *Controller {
+func NewController(m driver.Matcher,store []vulnstore.Store) *Controller {
 	return &Controller{
 		m:     m,
 		store: store,
 
-		DA_store: DA_Store,
+		//DA_store: DA_Store,
 	}
 }
 
@@ -133,13 +133,13 @@ func (mc *Controller) query(ctx context.Context, interested []*claircore.IndexRe
 	// log.Printf("%v",e)
 
 
-	matches, err := mc.store.Get(ctx, interested, getOpts)
+	matches, err := mc.store[0].Get(ctx, interested, getOpts)
 	if err != nil {
 		return nil, err
 	}
    
 	if(mc.m.Name()=="python"){
-		vulns,_:=mc.DA_store.Get(ctx,interested,getOpts)
+		vulns,_:=mc.store[1].Get(ctx,interested,getOpts)
 		//fmt.Println("Just a dummmy",vulns,e)
   
 		matches["0"]=vulns["0"]

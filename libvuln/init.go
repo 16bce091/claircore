@@ -20,9 +20,10 @@ import (
 
 // initUpdaters provides initial burst control to not launch too many updaters at once.
 // returns any errors on eC and returns a CaneclFunc on dC to stop all updaters
-func initUpdaters(ctx context.Context, opts *Opts, db *sqlx.DB, store vulnstore.Updater, dC chan context.CancelFunc, eC chan error) {
+//func initUpdaters(ctx context.Context, opts *Opts, db *sqlx.DB, store vulnstore.Updater, dC chan context.CancelFunc, eC chan error) {
 	// just to be defensive
-	err := opts.Parse()
+	func initUpdaters(ctx context.Context, opts *Opts, dC chan context.CancelFunc, eC chan error) {
+	err := opts.Parse(ctx)
 	if err != nil {
 		eC <- err
 		return
@@ -30,6 +31,13 @@ func initUpdaters(ctx context.Context, opts *Opts, db *sqlx.DB, store vulnstore.
 
 	controllers := map[string]*updater.Controller{}
 
+	//creating a loop to init updaters
+
+for _,s:=range opts.vulnStores{
+
+	if s.db==nil{
+		continue
+	}
 	for _, u := range opts.Updaters {
 		if _, ok := controllers[u.Name()]; ok {
 			eC <- fmt.Errorf("duplicate updater found in UpdaterFactory. all names must be unique: %s", u.Name())
@@ -37,13 +45,15 @@ func initUpdaters(ctx context.Context, opts *Opts, db *sqlx.DB, store vulnstore.
 		}
 		controllers[u.Name()] = updater.New(&updater.Opts{
 			Updater:       u,
-			Store:         store,
+		//	Store:         store,
+			Store:         s.store,
 			Name:          u.Name(),
 			Interval:      opts.UpdateInterval,
-			Lock:          pglock.NewLock(db, time.Duration(0)),
+			Lock:          pglock.NewLock(s.db, time.Duration(0)),
 			UpdateOnStart: false,
 		})
 	}
+}
 
 	// limit initial concurrent updates
 	cc := make(chan struct{}, opts.UpdaterInitConcurrency)

@@ -13,7 +13,7 @@ import (
 )
 
 // Match receives an IndexReport and creates a VulnerabilityReport containing matched vulnerabilities
-func Match(ctx context.Context, ir *claircore.IndexReport, matchers []driver.Matcher, store vulnstore.Vulnerability, dastore vulnstore.Vulnerability) (*claircore.VulnerabilityReport, error) {
+func Match(ctx context.Context, ir *claircore.IndexReport, matchers []driver.Matcher,store []vulnstore.Store) (*claircore.VulnerabilityReport, error) {
 	// the vulnerability report we are creating
 	vr := &claircore.VulnerabilityReport{
 		Hash:                   ir.Hash,
@@ -39,7 +39,7 @@ func Match(ctx context.Context, ir *claircore.IndexReport, matchers []driver.Mat
 		for _, m := range matchers {
 			mm := m
 			g.Go(func() error {
-				mc := NewController(mm, store,dastore)
+				mc := NewController(mm,store)
 
 
 				// pass DA_Store to the new Controller
