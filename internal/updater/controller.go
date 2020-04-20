@@ -26,7 +26,7 @@ type Opts struct {
 	// a unique name for this controller. must be unique between controllers
 	Name string
 	// store for persistence
-	Store vulnstore.Updater
+	Store vulnstore.Store
 	// update interval
 	Interval time.Duration
 	// lock to ensure only process updating
@@ -44,6 +44,11 @@ func New(opts *Opts) *Controller {
 
 // Start begins a long running update controller. cancel ctx to stop.
 func (u *Controller) Start(ctx context.Context) error {
+     if u.Store!=nil{
+		 fmt.Println("STARTTT!!")
+	 }
+
+	 
 	log := zerolog.Ctx(ctx).With().
 		Str("component", "internal/updater/Controller").
 		Str("name", u.Name).
@@ -100,7 +105,10 @@ func (u *Controller) Update(ctx context.Context) error {
 	// retrieve previous fingerprint. GetUpdateOperations will
 	// return update operations in descending order
 	var prevFP driver.Fingerprint
+	fmt.Println("Calling Store")
 	allUOs, err := u.Store.GetUpdateOperations(ctx, u.Updater.Name())
+	fmt.Println("After calling store")
+
 	if err != nil {
 		return err
 	}

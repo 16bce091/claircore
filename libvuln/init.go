@@ -23,11 +23,11 @@ import (
 //func initUpdaters(ctx context.Context, opts *Opts, db *sqlx.DB, store vulnstore.Updater, dC chan context.CancelFunc, eC chan error) {
 	// just to be defensive
 	func initUpdaters(ctx context.Context, opts *Opts, dC chan context.CancelFunc, eC chan error) {
-	err := opts.Parse(ctx)
-	if err != nil {
-		eC <- err
-		return
-	}
+	// err := opts.Parse(ctx)
+	// if err != nil {
+	// 	eC <- err
+	// 	return
+	// }
 
 	controllers := map[string]*updater.Controller{}
 
@@ -35,9 +35,13 @@ import (
 
 for _,s:=range opts.vulnStores{
 
-	if s.db==nil{
+	if s.name=="dastore"{
 		continue
 	}
+
+
+
+		fmt.Println("Inside the updater Controller of postgres store ",s.name)
 	for _, u := range opts.Updaters {
 		if _, ok := controllers[u.Name()]; ok {
 			eC <- fmt.Errorf("duplicate updater found in UpdaterFactory. all names must be unique: %s", u.Name())
@@ -53,6 +57,7 @@ for _,s:=range opts.vulnStores{
 			UpdateOnStart: false,
 		})
 	}
+  
 }
 
 	// limit initial concurrent updates

@@ -9,9 +9,9 @@ import (
 )
 func get(ctx context.Context,records []*claircore.IndexRecord)(map[string][]*claircore.Vulnerability, error) {
   
-	 fmt.Println("Inside get printing",records)
+//	 fmt.Println("Inside get printing",records)
 
-
+   fmt.Println("Inside da store get")
 	 results := make(map[string][]*claircore.Vulnerability)
 
 	 v:=&claircore.Vulnerability{
@@ -45,7 +45,7 @@ func get(ctx context.Context,records []*claircore.IndexRecord)(map[string][]*cla
 			return results,nil
 		 }
 
-		 fmt.Printf("%v %v",value.Package.Name,value.Package.Version)
+	//	 fmt.Printf("%v %v",value.Package.Name,value.Package.Version)
 		 
 	 }
 	

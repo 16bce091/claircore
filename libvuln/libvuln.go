@@ -85,10 +85,11 @@ func (l *Libvuln) Scan(ctx context.Context, ir *claircore.IndexReport) (*clairco
 func (l *Libvuln) UpdateOperations(ctx context.Context, updaters ...string) (map[string][]driver.UpdateOperation, error) {
 	results:=make(map[string][]driver.UpdateOperation)
     for _,stores:=range l.stores{
+
+		if stores.db==nil{
+			continue
+		}
 		result,err:=stores.store.GetUpdateOperations(ctx, updaters...)
-	    if result==nil{
-		   continue
-	    }
 	    if err!=nil{
 		   return result,err
 	    }
@@ -101,6 +102,9 @@ func (l *Libvuln) UpdateOperations(ctx context.Context, updaters ...string) (map
 // associated vulnerabilities from the vulnerability database.
 func (l *Libvuln) DeleteUpdateOperations(ctx context.Context, ref ...uuid.UUID) error {
 	for _,stores:=range l.stores{
+	  if stores.db==nil{
+		  continue
+	  }
       err:=stores.store.DeleteUpdateOperations(ctx, ref...)
       if err!=nil{
 		 return err
@@ -113,10 +117,11 @@ func (l *Libvuln) DeleteUpdateOperations(ctx context.Context, ref ...uuid.UUID) 
 // and cur.
 func (l *Libvuln) UpdateDiff(ctx context.Context, prev, cur uuid.UUID) (*driver.UpdateDiff, error) {
    for _,stores:=range l.stores{
-	   result,err:= stores.store.GetUpdateDiff(ctx, prev, cur)
-       if result==nil{
-		  continue
+	   if stores.db==nil{
+		   continue
 	   }
+	   result,err:= stores.store.GetUpdateDiff(ctx, prev, cur)
+       
 	   if err!=nil{
 	     return result,err
 	   }
@@ -132,10 +137,10 @@ func (l *Libvuln) UpdateDiff(ctx context.Context, prev, cur uuid.UUID) (*driver.
 func (l *Libvuln) LatestUpdateOperations(ctx context.Context) (map[string]uuid.UUID, error) {
 	results:=make(map[string]uuid.UUID)
 	for _,stores:=range l.stores{
+		if stores.db==nil{
+			continue
+		}
         result,err:=stores.store.GetLatestUpdateRefs(ctx)
-        if result==nil{
-		   continue
-        }
         if err!=nil{
            return result,err
 	    }
@@ -150,10 +155,10 @@ func (l *Libvuln) LatestUpdateOperations(ctx context.Context) (map[string]uuid.U
 // return new results.
 func (l *Libvuln) LatestUpdateOperation(ctx context.Context) (uuid.UUID, error) {
 	for _,stores:=range l.stores{
+	   if stores.db==nil{
+		   continue
+	   }
        result,err:= stores.store.GetLatestUpdateRef(ctx)
-       if result==uuid.Nil{
-		  continue
-       }
        if err!=nil{
 		  return result,err
 	   }

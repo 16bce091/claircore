@@ -23,6 +23,7 @@ const (
 )
 // making the struct for array of stores
 type Stores struct{
+	name  string
     store vulnstore.Store
 	db    *sqlx.DB
 }
@@ -97,10 +98,12 @@ func (o *Opts) Parse(ctx context.Context) error {
 	}
     o.vulnStores=[]Stores{
 		{
+			name:  "postgres",
 			store: postgresStore,
 			db: db,
 		},
         {
+			name: "dastore",
 			store: daStore,
 			db:nil,
 		},
